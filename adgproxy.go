@@ -5,8 +5,6 @@ package adgproxy
 
 import (
 	"context"
-	"time"
-
 	"github.com/AdguardTeam/dnsproxy/upstream"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
@@ -55,21 +53,6 @@ func (a ADGProxy) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg
 func (a ADGProxy) Name() string { return pluginName }
 
 func (a *ADGProxy) OnStartup() error {
-	// 读取来自文件的 Config 并组装 dnsproxy 配置
-	opts := &upstream.Options{}
-	opts.Bootstrap = a.ConfigFromFile.Bootstraps
-	// 暂定 5 秒
-	opts.Timeout = time.Second * 5
-	opts.InsecureSkipVerify = a.ConfigFromFile.Insecure
-	for i, up := range a.ConfigFromFile.Upstreams {
-		u, err := upstream.AddressToUpstream(up, opts)
-		if err != nil {
-			log.Errorf("解析上游 %d: %s 失败", i, err)
-			return err
-		}
-		a.Upstreams = append(a.Upstreams, u)
-		log.Infof("上游 %d 为: %s", i, up)
-	}
 	return nil
 }
 

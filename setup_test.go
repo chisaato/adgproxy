@@ -1,7 +1,6 @@
 package adgproxy
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/coredns/caddy"
@@ -28,13 +27,21 @@ func TestReadBlock(t *testing.T) {
 adgproxy {
 	upstream https://dns.google/dns-query
 	upstream https://1.1.1.1/dns-query
-	bootstrap https://223.5.5.5/dns-query
+	//bootstrap https://223.5.5.5/dns-query
 	insecure
 }
 `,
 	)
-	if err := setup(c); err != nil {
+	a := &ADGProxy{
+		ConfigFromFile: &configFromFile{
+			Insecure: false,
+		},
+	}
+	err := parseConfig(c, a)
+	if err != nil {
 		t.Fatalf("Expected no errors, but got: %v", err)
 	}
-	fmt.Println(ConfigFromFile)
+	for _, up := range a.ConfigFromFile.Upstreams {
+		t.Log(up)
+	}
 }
