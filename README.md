@@ -1,81 +1,30 @@
-# example
+# adgproxy 插件
 
-## Name
+使用 AdGuard 相关组件实现 DNS 客户端的 CoreDNS 插件.
 
-*example* - prints "example" after a query is handled.
+配置文件
 
-## Description
-
-The example plugin prints "example" on every query that got handled by the server. It serves as
-documentation for writing CoreDNS plugins.
-
-## Compilation
-
-This package will always be compiled as part of CoreDNS and not in a standalone way. It will require you to use `go get` or as a dependency on [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg).
-
-The [manual](https://coredns.io/manual/toc/#what-is-coredns) will have more information about how to configure and extend the server with external plugins.
-
-A simple way to consume this plugin, is by adding the following on [plugin.cfg](https://github.com/coredns/coredns/blob/master/plugin.cfg), and recompile it as [detailed on coredns.io](https://coredns.io/2017/07/25/compile-time-enabling-or-disabling-plugins/#build-with-compile-time-configuration-file).
-
-~~~
-example:github.com/coredns/example
-~~~
-
-Put this early in the plugin list, so that *
-example* is executed before any of the other plugins.
-
-After this you can compile coredns by:
-
-``` sh
-go generate
-go build
-```
-
-Or you can instead use make:
-
-``` sh
-make
-```
-
-## Syntax
-
-~~~ txt
-example
-~~~
-
-## Metrics
-
-If monitoring is enabled (via the *prometheus* directive) the following metric is exported:
-
-* `coredns_example_request_count_total{server}` - query count to the *example* plugin.
-
-The `server` label indicated which server handled the request, see the *metrics* plugin for details.
-
-## Ready
-
-This plugin reports readiness to the ready plugin. It will be immediately ready.
-
-## Examples
-
-In this configuration, we forward all queries to 9.9.9.9 and print "example" whenever we receive
-a query.
-
-~~~ corefile
-. {
-  forward . 9.9.9.9
-  example
+```text
+adgproxy {
+    # 上游,可以写多个
+    upstream https://1.1.1.1/dns-query
+    # 引导服务器,可以写多个
+    bootstrap https://223.5.5.5/dns-query
+    # 模式,负载均衡或并行
+    mode load_balance
+    # mode parallel
+    # 是否允许不安全的 TLS,你不会想用 true 的
+    # 只有声明 true 的时候才会开启 insecure 只写一个 insecure 也当做 false
+    # insecure false
+    # geosite 规则文件,留空就用运行目录下的 geosite.dat
+    geosite geosite.dat
+    # geoip 规则文件,留空就用运行目录下的 geoip.dat
+    geoip geoip.dat
+    # 规则,自上而下处理,不写的默认 PASS (即交给后续处理)
+    # PROXY 表示转发
+    rule GEOSITE,google,PROXY
+    rule GEOSITE,facebook,PROXY
+    # PASS 表示不处理,交给后续
+    rule GEOSITE,bilibili,PASS
 }
-~~~
-
-Or without any external connectivity:
-
-~~~ corefile
-. {
-  whoami
-  example
-}
-~~~
-
-## Also See
-
-See the [manual](https://coredns.io/manual).
+```
